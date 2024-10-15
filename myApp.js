@@ -1,54 +1,109 @@
+// Packages
 require('dotenv').config();
+const mongoose = require('mongoose')
 
+mongoose.connect(
+  process.env.MONGO_URI,
+  { 
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  }
+)
 
-let Person;
+const personSchema = new mongoose.Schema({
+  age: Number,
+  favoriteFoods: [String],
+  name: {
+    type: String,
+    required: true,
+  }
+});
 
-const createAndSavePerson = (done) => {
-  done(null /*, data*/);
+const Person = mongoose.model('Person', personSchema)
+
+const createAndSavePerson = async (done) => {
+  const document = new Person({
+    age: 34,
+    name: 'Steve',
+    favoriteFoods: [ 'Tacos', 'Jackie' ]
+  })
+
+  await document.save(function (error, data) {
+
+  })
+
+  done(null, document);
 };
 
-const createManyPeople = (arrayOfPeople, done) => {
-  done(null /*, data*/);
+const createManyPeople = async (arrayOfPeople, done) => {
+  const documents = await Person.create(arrayOfPeople)
+  done(null, documents);
 };
 
-const findPeopleByName = (personName, done) => {
-  done(null /*, data*/);
+const findPeopleByName = async (personName, done) => {
+  const documents = await Person.find({
+    name: personName,
+  }).exec()
+  done(null, documents);
 };
 
-const findOneByFood = (food, done) => {
-  done(null /*, data*/);
+const findOneByFood = async (food, done) => {
+  const document = await Person.findOne({
+    favoriteFoods: { $in: food },
+  })
+  done(null, document);
 };
 
-const findPersonById = (personId, done) => {
-  done(null /*, data*/);
+const findPersonById = async (personId, done) => {
+  const document = await Person.findById(personId)
+  done(null, document);
 };
 
-const findEditThenSave = (personId, done) => {
+const findEditThenSave = async (personId, done) => {
   const foodToAdd = "hamburger";
+  const person = await Person.findById(personId).exec()
 
-  done(null /*, data*/);
+  person.favoriteFoods.push(foodToAdd)
+
+  await person.save()
+
+  done(null, person);
 };
 
-const findAndUpdate = (personName, done) => {
+const findAndUpdate = async (personName, done) => {
   const ageToSet = 20;
+  const person = await Person.findOneAndUpdate(
+    { name: personName },
+    { age: 20 },
+    { new: true }
+  )
 
-  done(null /*, data*/);
+  done(null, person);
 };
 
-const removeById = (personId, done) => {
-  done(null /*, data*/);
+const removeById = async (personId, done) => {
+  const deletedPerson = await Person.findByIdAndRemove(personId)
+
+  done(null, deletedPerson);
 };
 
-const removeManyPeople = (done) => {
+const removeManyPeople = async (done) => {
   const nameToRemove = "Mary";
+  const peopleRemovedOutcome = await Person.remove({ name: nameToRemove })
 
-  done(null /*, data*/);
+  done(null, peopleRemovedOutcome);
 };
 
-const queryChain = (done) => {
+const queryChain = async (done) => {
   const foodToSearch = "burrito";
+  const documents = await Person
+      .find({ favoriteFoods: { $in: foodToSearch }})
+      .sort({ name: 'asc' })
+      .limit(2)
+      .select(['name', 'favoriteFoods'])
+      .exec()
 
-  done(null /*, data*/);
+  done(null, documents);
 };
 
 /** **Well Done !!**
